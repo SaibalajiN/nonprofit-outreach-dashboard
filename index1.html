@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nonprofit Outreach Analytics System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0F1117;
+  --surface: #181B24;
+  --surface2: #1E2231;
+  --surface3: #252A3A;
+  --border: rgba(255,255,255,.08);
+  --border2: rgba(255,255,255,.14);
+  --text: #EEF0F8;
+  --text2: #8B90A8;
+  --text3: #5C6078;
+  --green: #22D98A;
+  --green2: #1AAD6C;
+  --teal: #2DD4D4;
+  --blue: #4A8EF5;
+  --amber: #F5A623;
+  --coral: #F5624D;
+  --purple: #A78BFA;
+  --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── HEADER ── */
+.header {
+  padding: 22px 36px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  background: linear-gradient(180deg, rgba(34,217,138,.04) 0%, transparent 100%);
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.logo {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--green), var(--teal));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-family: 'Syne', sans-serif; font-weight: 700; color: #0F1117;
+}
+.header-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+.header-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.header-right { display: flex; gap: 10px; align-items: center; }
+.badge {
+  font-size: 11px; padding: 4px 10px; border-radius: 20px;
+  border: 1px solid; letter-spacing: 0.3px;
+}
+.badge-green { border-color: rgba(34,217,138,.3); color: var(--green); background: rgba(34,217,138,.06); }
+.badge-teal  { border-color: rgba(45,212,212,.3); color: var(--teal);  background: rgba(45,212,212,.06); }
+.badge-blue  { border-color: rgba(74,142,245,.3); color: var(--blue);  background: rgba(74,142,245,.06); }
+
+/* ── NAV TABS ── */
+.nav-tabs {
+  display: flex; gap: 0;
+  padding: 0 36px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  font-size: 13px; font-weight: 500; padding: 12px 18px;
+  color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all .15s; user-select: none; white-space: nowrap;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* ── FILTERS ── */
+.filters {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 10px 36px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.filter-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text3); }
+.filters select {
+  font-family: 'Space Grotesk', sans-serif; font-size: 12.5px; color: var(--text);
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px;
+  padding: 5px 24px 5px 10px; appearance: none; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%238B90A8'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center;
+}
+.filters select:focus { outline: none; border-color: var(--green); }
+.vdiv { height: 16px; width: 1px; background: var(--border2); }
+
+/* ── MAIN LAYOUT ── */
+.main { padding: 24px 36px; display: flex; flex-direction: column; gap: 18px; }
+
+/* ── KPI ROW ── */
+.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.kpi {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 18px 18px 16px; position: relative; overflow: hidden;
+}
+.kpi::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.kpi.g::before  { background: var(--green); }
+.kpi.t::before  { background: var(--teal); }
+.kpi.b::before  { background: var(--blue); }
+.kpi.a::before  { background: var(--amber); }
+.kpi.p::before  { background: var(--purple); }
+.kpi-glow { position: absolute; top: -30px; right: -30px; width: 80px; height: 80px; border-radius: 50%; filter: blur(24px); opacity: 0.12; }
+.kpi.g .kpi-glow { background: var(--green); }
+.kpi.t .kpi-glow { background: var(--teal); }
+.kpi.b .kpi-glow { background: var(--blue); }
+.kpi.a .kpi-glow { background: var(--amber); }
+.kpi.p .kpi-glow { background: var(--purple); }
+.kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text3); margin-bottom: 6px; }
+.kpi-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; line-height: 1; }
+.kpi.g .kpi-value { color: var(--green); }
+.kpi.t .kpi-value { color: var(--teal); }
+.kpi.b .kpi-value { color: var(--blue); }
+.kpi.a .kpi-value { color: var(--amber); }
+.kpi.p .kpi-value { color: var(--purple); }
+.kpi-sub { font-size: 11px; color: var(--text3); margin-top: 5px; }
+.kpi-pill {
+  position: absolute; top: 15px; right: 14px;
+  font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+}
+.pill-up   { background: rgba(34,217,138,.12); color: var(--green); }
+.pill-down { background: rgba(245,98,77,.12);  color: var(--coral); }
+
+/* ── GRID ROWS ── */
+.row2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.row2b{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ── PANEL ── */
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 22px;
+}
+.panel-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.panel-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); }
+.panel-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.panel-pill {
+  font-size: 10px; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border2);
+  color: var(--text2); white-space: nowrap;
+}
+
+/* ── CHARTS ── */
+.chart-wrap { position: relative; width: 100%; }
+
+/* ── TREND TABS ── */
+.metric-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.mtab {
+  font-size: 11px; padding: 4px 10px; border-radius: 5px; cursor: pointer;
+  border: 1px solid var(--border2); color: var(--text2); transition: all .12s; user-select: none;
+}
+.mtab:hover { color: var(--text); border-color: rgba(255,255,255,.2); }
+.mtab.active { background: rgba(34,217,138,.12); border-color: rgba(34,217,138,.3); color: var(--green); }
+.mtab.active-teal  { background: rgba(45,212,212,.12); border-color: rgba(45,212,212,.3); color: var(--teal); }
+.mtab.active-blue  { background: rgba(74,142,245,.12); border-color: rgba(74,142,245,.3); color: var(--blue); }
+.mtab.active-amber { background: rgba(245,166,35,.12); border-color: rgba(245,166,35,.3); color: var(--amber); }
+
+/* ── REGION BARS ── */
+.region-row { display: flex; flex-direction: column; gap: 10px; }
+.rr { display: flex; flex-direction: column; gap: 4px; }
+.rr-top { display: flex; justify-content: space-between; font-size: 12.5px; }
+.rr-name { color: var(--text); font-weight: 500; }
+.rr-val { color: var(--text2); }
+.rr-track { height: 5px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+.rr-fill { height: 100%; border-radius: 3px; transition: width .5s; }
+
+/* ── SERVICE DONUTS ── */
+.donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.donut-legend { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.dl-row { display: flex; align-items: center; gap: 8px; font-size: 11.5px; }
+.dl-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.dl-name { flex: 1; color: var(--text2); }
+.dl-pct { color: var(--text); font-weight: 500; }
+
+/* ── PIPELINE SECTION ── */
+.pipeline-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; }
+.pipeline-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 16px; }
+.ps {
+  padding: 18px 16px;
+  border: 1px solid var(--border); border-right: none;
+  position: relative;
+}
+.ps:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.ps:last-child  { border-right: 1px solid var(--border); border-radius: 0 var(--radius) var(--radius) 0; }
+.ps-arrow {
+  position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+  width: 20px; height: 20px; background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--text2); z-index: 2;
+}
+.ps:last-child .ps-arrow { display: none; }
+.ps-step { font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); margin-bottom: 6px; }
+.ps-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.ps-desc { font-size: 11px; color: var(--text2); line-height: 1.5; }
+.ps-tech { margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
+.ps-chip {
+  font-size: 9px; padding: 2px 6px; border-radius: 3px;
+  background: var(--surface3); border: 1px solid var(--border2); color: var(--text3);
+}
+.ps.active-step .ps-title { color: var(--green); }
+.ps.active-step { background: rgba(34,217,138,.03); border-color: rgba(34,217,138,.15); }
+
+/* ── STATS TABLE ── */
+.stat-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.stat-table th {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--text3); text-align: left; padding: 6px 10px 8px;
+  border-bottom: 1px solid var(--border2); font-weight: 500;
+}
+.stat-table th.right { text-align: right; }
+.stat-table td { padding: 8px 10px; border-bottom: 0.5px solid var(--border); }
+.stat-table td.right { text-align: right; }
+.stat-table tr:last-child td { border-bottom: none; }
+.stat-table tr:hover td { background: var(--surface2); }
+.pct-pill {
+  display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px;
+}
+.pct-hi { background: rgba(34,217,138,.12); color: var(--green); }
+.pct-md { background: rgba(74,142,245,.12); color: var(--blue); }
+.pct-lo { background: rgba(139,144,168,.1); color: var(--text2); }
+
+/* ── QUARTERLY BARS ── */
+.q-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; align-items: end; height: 120px; margin-top: 8px; }
+.q-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.q-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; transition: height .4s; }
+.q-label { font-size: 9px; color: var(--text3); text-align: center; letter-spacing: -0.2px; line-height: 1.2; }
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center; padding: 16px; font-size: 11px; color: var(--text3);
+  border-top: 1px solid var(--border); margin-top: 4px;
+}
+
+/* PAGE SECTIONS */
+.page { display: none; }
+.page.active { display: contents; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo">N</div>
+    <div>
+      <div class="header-title">Nonprofit Outreach Analytics</div>
+      <div class="header-sub">Data pipeline + reporting dashboard · 2022–2023 · California</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="badge badge-green">Pipeline: Active</div>
+    <div class="badge badge-teal">3,744 records</div>
+    <div class="badge badge-blue">Last run: 2023-12-31</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="nav-tabs">
+  <div class="tab active" onclick="showTab('overview',this)">Overview</div>
+  <div class="tab" onclick="showTab('regional',this)">Regional</div>
+  <div class="tab" onclick="showTab('services',this)">Services</div>
+  <div class="tab" onclick="showTab('pipeline',this)">Data Pipeline</div>
+</div>
+
+<!-- FILTERS -->
+<div class="filters">
+  <span class="filter-label">Filter</span>
+  <select id="yearSel" onchange="updateAll()">
+    <option value="all">All Years</option>
+    <option value="2022">2022</option>
+    <option value="2023">2023</option>
+  </select>
+  <div class="vdiv"></div>
+  <select id="regionSel" onchange="updateAll()">
+    <option value="all">All Regions</option>
+    <option>Central Valley</option>
+    <option>Los Angeles</option>
+    <option>Inland Empire</option>
+    <option>Bay Area</option>
+    <option>Sacramento</option>
+    <option>San Diego</option>
+  </select>
+  <div class="vdiv"></div>
+  <select id="metricSel" onchange="updateTrend()">
+    <option value="served">People Served</option>
+    <option value="donations">Donations ($)</option>
+    <option value="calls">Helpline Calls</option>
+    <option value="visits">Website Visits</option>
+  </select>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ═══════════ OVERVIEW TAB ═══════════ -->
+  <div id="tab-overview" class="page active">
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi g">
+        <div class="kpi-glow"></div>
+        <div class="kpi-label">People Served</div>
+        <div class="kpi-value" id="kv-served">198,675</div>
+        <div class="kpi-sub">2022–2023 total</div>
+        <div class="kpi-pill pill-up" id="kp-served">+10.6% YoY</div>
+      </div>
+      <div class="kpi t">
+        <div class="kpi-glow"></div>
+        <div class="kpi-label">Total Donations</div>
+        <div class="kpi-value" id="kv-donated">$1.71M</div>
+        <div class="kpi-sub">From all campaigns</div>
+        <div class="kpi-pill pill-up">+12.4%</div>
+      </div>
+      <div class="kpi b">
+        <div class="kpi-glow"></div>
+        <div class="kpi-label">Volunteer Hours</div>
+        <div class="kpi-value" id="kv-vol">146,945</div>
+        <div class="kpi-sub">Across all programs</div>
+        <div class="kpi-pill pill-up">+9.8%</div>
+      </div>
+      <div class="kpi a">
+        <div class="kpi-glow"></div>
+        <div class="kpi-label">Helpline Calls</div>
+        <div class="kpi-value" id="kv-calls">21,295</div>
+        <div class="kpi-sub">Intake + referrals</div>
+        <div class="kpi-pill pill-up">+8.2%</div>
+      </div>
+      <div class="kpi p">
+        <div class="kpi-glow"></div>
+        <div class="kpi-label">Active Regions</div>
+        <div class="kpi-value">6</div>
+        <div class="kpi-sub">California counties</div>
+        <div class="kpi-pill pill-up">+1 region</div>
+      </div>
+    </div>
+
+    <!-- Trend + Donut -->
+    <div class="row2">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Monthly Trend</div>
+            <div class="panel-sub">Jan 2022 – Dec 2023 · switch metric below</div>
+          </div>
+          <div class="panel-pill" id="trend-pill">People Served</div>
+        </div>
+        <div class="metric-tabs">
+          <div class="mtab active" onclick="switchMetric('served',this,'active')">People Served</div>
+          <div class="mtab" onclick="switchMetric('donations',this,'active-amber')">Donations</div>
+          <div class="mtab" onclick="switchMetric('calls',this,'active-teal')">Helpline Calls</div>
+          <div class="mtab" onclick="switchMetric('visits',this,'active-blue')">Web Visits</div>
+        </div>
+        <div class="chart-wrap" style="height:200px"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Service Breakdown</div>
+            <div class="panel-sub">People served by program type</div>
+          </div>
+          <div class="panel-pill">2022–23</div>
+        </div>
+        <div class="donut-wrap">
+          <div class="chart-wrap" style="height:170px;width:170px"><canvas id="donutChart"></canvas></div>
+          <div class="donut-legend" id="donut-legend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quarterly + Channel -->
+    <div class="row2b">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Quarterly Volume</div>
+            <div class="panel-sub">People served per quarter</div>
+          </div>
+          <div class="panel-pill">8 quarters</div>
+        </div>
+        <div class="q-grid" id="q-grid"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:9px;color:var(--text3)">
+          <span>Q1 '22</span><span>Q2</span><span>Q3</span><span>Q4</span>
+          <span>Q1 '23</span><span>Q2</span><span>Q3</span><span>Q4</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Channel Performance</div>
+            <div class="panel-sub">People served by intake channel</div>
+          </div>
+          <div class="panel-pill">All time</div>
+        </div>
+        <div class="chart-wrap" style="height:170px"><canvas id="channelChart"></canvas></div>
+      </div>
+    </div>
+
+  </div><!-- /overview -->
+
+  <!-- ═══════════ REGIONAL TAB ═══════════ -->
+  <div id="tab-regional" class="page">
+    <div class="row2">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Region Comparison</div>
+            <div class="panel-sub">People served by region</div>
+          </div>
+          <div class="panel-pill">6 regions</div>
+        </div>
+        <div class="chart-wrap" style="height:280px"><canvas id="regionBarChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Regional Performance</div>
+            <div class="panel-sub">Served · Donations · Volunteer hours</div>
+          </div>
+        </div>
+        <div class="region-row" id="region-row"></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:0">
+      <div class="panel-head">
+        <div><div class="panel-title">Regional Detail Table</div></div>
+        <div class="panel-pill">Full breakdown</div>
+      </div>
+      <table class="stat-table">
+        <thead>
+          <tr>
+            <th>Region</th>
+            <th class="right">People Served</th>
+            <th class="right">Donations</th>
+            <th class="right">Vol. Hours</th>
+            <th class="right">Donation/Person</th>
+            <th class="right">Share</th>
+          </tr>
+        </thead>
+        <tbody id="region-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════ SERVICES TAB ═══════════ -->
+  <div id="tab-services" class="page">
+    <div class="row3">
+      <div class="panel" style="grid-column: span 2">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Service Volume Comparison</div>
+            <div class="panel-sub">Total people served by program</div>
+          </div>
+          <div class="panel-pill">All programs</div>
+        </div>
+        <div class="chart-wrap" style="height:260px"><canvas id="serviceBarChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Program Mix</div>
+            <div class="panel-sub">Percentage of total served</div>
+          </div>
+        </div>
+        <div style="height:210px;position:relative"><canvas id="servicePieChart"></canvas></div>
+        <div id="service-pie-legend" style="margin-top:10px;display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <div><div class="panel-title">Service Detail</div></div>
+      </div>
+      <table class="stat-table">
+        <thead>
+          <tr>
+            <th>Service Program</th>
+            <th class="right">People Served</th>
+            <th class="right">% of Total</th>
+            <th class="right">Category</th>
+          </tr>
+        </thead>
+        <tbody id="service-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════ PIPELINE TAB ═══════════ -->
+  <div id="tab-pipeline" class="page">
+    <div class="pipeline-panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Data Collection + Processing Pipeline</div>
+          <div class="panel-sub">Simulated nonprofit outreach system · Python + CSV → Dashboard</div>
+        </div>
+        <div class="badge badge-green">All stages complete</div>
+      </div>
+      <div class="pipeline-steps">
+        <div class="ps active-step">
+          <div class="ps-step">Stage 1</div>
+          <div class="ps-title">Data Collection</div>
+          <div class="ps-desc">Weekly outreach metrics across 6 regions, 6 services, and 5 intake channels. Simulates real nonprofit CRM data.</div>
+          <div class="ps-tech"><span class="ps-chip">CSV Storage</span><span class="ps-chip">3,744 records</span><span class="ps-chip">2 years</span></div>
+          <div class="ps-arrow">→</div>
+        </div>
+        <div class="ps">
+          <div class="ps-step">Stage 2</div>
+          <div class="ps-title">Ingestion + Validation</div>
+          <div class="ps-desc">Load raw CSV, validate schema, cast types, drop nulls and out-of-range values. Flags data quality issues.</div>
+          <div class="ps-tech"><span class="ps-chip">Python</span><span class="ps-chip">csv module</span><span class="ps-chip">Type casting</span></div>
+          <div class="ps-arrow">→</div>
+        </div>
+        <div class="ps">
+          <div class="ps-step">Stage 3</div>
+          <div class="ps-title">Enrichment + Calc</div>
+          <div class="ps-desc">Adds week-over-week growth %, cost per person, engagement ratio, month/quarter grouping keys.</div>
+          <div class="ps-tech"><span class="ps-chip">Python</span><span class="ps-chip">Calculated fields</span><span class="ps-chip">Rolling calcs</span></div>
+          <div class="ps-arrow">→</div>
+        </div>
+        <div class="ps">
+          <div class="ps-step">Stage 4</div>
+          <div class="ps-title">Aggregation + Output</div>
+          <div class="ps-desc">Summarizes into monthly trends, regional totals, service breakdowns. Outputs processed CSV + JSON for dashboard.</div>
+          <div class="ps-tech"><span class="ps-chip">JSON export</span><span class="ps-chip">Aggregation</span><span class="ps-chip">Dashboard-ready</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics grid -->
+    <div class="row3">
+      <div class="panel">
+        <div class="panel-head"><div><div class="panel-title">Input Data Stats</div></div></div>
+        <table class="stat-table">
+          <tbody>
+            <tr><td>Total raw records</td><td class="right" style="color:var(--green);font-weight:600">3,744</td></tr>
+            <tr><td>Records passing validation</td><td class="right">3,744 (100%)</td></tr>
+            <tr><td>Null / invalid dropped</td><td class="right">0</td></tr>
+            <tr><td>Date range</td><td class="right">Jan 2022 – Dec 2023</td></tr>
+            <tr><td>Regions covered</td><td class="right">6</td></tr>
+            <tr><td>Service types</td><td class="right">6</td></tr>
+            <tr><td>Intake channels</td><td class="right">5</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><div class="panel-title">Calculated Fields Added</div></div></div>
+        <table class="stat-table">
+          <tbody>
+            <tr><td>Week-over-week growth %</td><td class="right"><span class="pct-pill pct-hi">✓ Added</span></td></tr>
+            <tr><td>Cost per person served</td><td class="right"><span class="pct-pill pct-hi">✓ Added</span></td></tr>
+            <tr><td>Engagement ratio</td><td class="right"><span class="pct-pill pct-hi">✓ Added</span></td></tr>
+            <tr><td>Month grouping key</td><td class="right"><span class="pct-pill pct-hi">✓ Added</span></td></tr>
+            <tr><td>Quarter grouping key</td><td class="right"><span class="pct-pill pct-hi">✓ Added</span></td></tr>
+            <tr><td>YoY comparison (annual)</td><td class="right"><span class="pct-pill pct-hi">✓ Added</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><div class="panel-title">Output Summary</div></div></div>
+        <table class="stat-table">
+          <tbody>
+            <tr><td>Processed CSV rows</td><td class="right" style="color:var(--teal);font-weight:600">3,744</td></tr>
+            <tr><td>Output fields per row</td><td class="right">16</td></tr>
+            <tr><td>Monthly trend records</td><td class="right">24</td></tr>
+            <tr><td>Regional aggregates</td><td class="right">6</td></tr>
+            <tr><td>Service aggregates</td><td class="right">6</td></tr>
+            <tr><td>Quarterly records</td><td class="right">8</td></tr>
+            <tr><td>YoY growth (served)</td><td class="right" style="color:var(--green)">+10.6%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  Nonprofit Outreach Analytics System · Data: Synthetic (BLS + Census methodology) · Pipeline: Python 3 · Dashboard: HTML/JS/Chart.js
+</div>
+
+<script>
+// ── EMBEDDED DATA (from pipeline.py output) ──────────────────────────────
+const DATA = {
+  kpis: { total_served:198675, total_donated:1712944, total_vol_hrs:146945, total_calls:21295, yoy_growth_pct:10.6, served_2022:94318, served_2023:104357 },
+  monthly_trend: [
+    {month:"2022-01",served:7568,donations:68838,calls:791,visits:15167,vol_hrs:5441},
+    {month:"2022-02",served:6550,donations:56601,calls:692,visits:12648,vol_hrs:4880},
+    {month:"2022-03",served:7066,donations:60660,calls:700,visits:14225,vol_hrs:5090},
+    {month:"2022-04",served:7697,donations:74118,calls:812,visits:14853,vol_hrs:5991},
+    {month:"2022-05",served:10262,donations:88156,calls:1089,visits:21084,vol_hrs:7650},
+    {month:"2022-06",served:8282,donations:57335,calls:882,visits:16892,vol_hrs:6012},
+    {month:"2022-07",served:8223,donations:65846,calls:902,visits:16219,vol_hrs:6486},
+    {month:"2022-08",served:9804,donations:85073,calls:1011,visits:20172,vol_hrs:7073},
+    {month:"2022-09",served:7246,donations:63670,calls:773,visits:14350,vol_hrs:5625},
+    {month:"2022-10",served:8604,donations:70027,calls:948,visits:17079,vol_hrs:6016},
+    {month:"2022-11",served:6547,donations:59827,calls:650,visits:12906,vol_hrs:4995},
+    {month:"2022-12",served:6469,donations:62049,calls:686,visits:12337,vol_hrs:5027},
+    {month:"2023-01",served:8350,donations:73154,calls:976,visits:16277,vol_hrs:6085},
+    {month:"2023-02",served:7393,donations:73977,calls:820,visits:14561,vol_hrs:5384},
+    {month:"2023-03",served:7930,donations:74523,calls:851,visits:15447,vol_hrs:5989},
+    {month:"2023-04",served:8615,donations:63059,calls:881,visits:17473,vol_hrs:6022},
+    {month:"2023-05",served:11142,donations:95027,calls:1211,visits:22477,vol_hrs:8238},
+    {month:"2023-06",served:9057,donations:67073,calls:956,visits:18505,vol_hrs:6831},
+    {month:"2023-07",served:11458,donations:101344,calls:1222,visits:22507,vol_hrs:8342},
+    {month:"2023-08",served:8540,donations:82232,calls:943,visits:17813,vol_hrs:6333},
+    {month:"2023-09",served:8130,donations:66837,calls:911,visits:15885,vol_hrs:6256},
+    {month:"2023-10",served:9477,donations:84931,calls:1004,visits:18548,vol_hrs:6696},
+    {month:"2023-11",served:7181,donations:59262,calls:787,visits:14398,vol_hrs:5270},
+    {month:"2023-12",served:7084,donations:59325,calls:797,visits:14195,vol_hrs:5213}
+  ],
+  regional_summary: [
+    {region:"Central Valley",served:48085,donations:420513,vol_hrs:35497},
+    {region:"Los Angeles",served:41090,donations:360104,vol_hrs:30975},
+    {region:"Inland Empire",served:33547,donations:283408,vol_hrs:24790},
+    {region:"Bay Area",served:27396,donations:231513,vol_hrs:19974},
+    {region:"Sacramento",served:26297,donations:230020,vol_hrs:19551},
+    {region:"San Diego",served:22260,donations:187386,vol_hrs:16158}
+  ],
+  service_breakdown: [
+    {service:"Food Box",served:80143},
+    {service:"Senior Meals",served:39865},
+    {service:"SNAP Enrollment",served:26290},
+    {service:"Youth Program",served:21807},
+    {service:"Case Management",served:17525},
+    {service:"Emergency Fund",served:13045}
+  ],
+  channel_breakdown: [
+    {channel:"Helpline",served:50733},
+    {channel:"Online",served:41619},
+    {channel:"Walk-in",served:40318},
+    {channel:"Referral",served:35344},
+    {channel:"Mobile Unit",served:30661}
+  ],
+  quarterly_trend: [
+    {quarter:"Q1 2022",served:21184},{quarter:"Q2 2022",served:26241},
+    {quarter:"Q3 2022",served:25273},{quarter:"Q4 2022",served:21620},
+    {quarter:"Q1 2023",served:23673},{quarter:"Q2 2023",served:28814},
+    {quarter:"Q3 2023",served:28128},{quarter:"Q4 2023",served:23742}
+  ]
+};
+
+// ── COLOR PALETTE ─────────────────────────────────────────────────────────
+const COLORS = {
+  green:'#22D98A', teal:'#2DD4D4', blue:'#4A8EF5', amber:'#F5A623',
+  coral:'#F5624D', purple:'#A78BFA', pink:'#F472B6'
+};
+const REGION_COLORS = [COLORS.green, COLORS.teal, COLORS.blue, COLORS.amber, COLORS.coral, COLORS.purple];
+const SERVICE_COLORS = [COLORS.green, COLORS.teal, COLORS.blue, COLORS.amber, COLORS.coral, COLORS.purple];
+const CHANNEL_COLORS = [COLORS.green, COLORS.blue, COLORS.teal, COLORS.amber, COLORS.coral];
+
+// ── CHART REGISTRY ────────────────────────────────────────────────────────
+const charts = {};
+
+function mkChart(id, type, data, options) {
+  if (charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, { type, data, options });
+  return charts[id];
+}
+
+const baseFont = { family: 'Space Grotesk', size: 11 };
+const gridColor = 'rgba(255,255,255,.05)';
+const tickColor = '#5C6078';
+
+// ── TREND CHART ───────────────────────────────────────────────────────────
+let currentMetric = 'served';
+const metricLabels = { served:'People Served', donations:'Donations ($)', calls:'Helpline Calls', visits:'Website Visits' };
+const metricColors = { served: COLORS.green, donations: COLORS.amber, calls: COLORS.teal, visits: COLORS.blue };
+
+function buildTrend(metric) {
+  currentMetric = metric;
+  document.getElementById('trend-pill').textContent = metricLabels[metric];
+  const months = DATA.monthly_trend.map(m => m.month.slice(5) + '/' + m.month.slice(2,4));
+  const vals = DATA.monthly_trend.map(m => m[metric]);
+  const col = metricColors[metric];
+  mkChart('trendChart','line', {
+    labels: months,
+    datasets: [{
+      data: vals, borderColor: col, backgroundColor: col.replace(')',', 0.08)').replace('rgb','rgba'),
+      borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: col, pointRadius: 2.5
+    }]
+  }, {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + metricLabels[metric] + ': ' + c.raw.toLocaleString() } } },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { font: baseFont, color: tickColor, maxTicksLimit: 12, autoSkip: true } },
+      y: { grid: { color: gridColor }, ticks: { font: baseFont, color: tickColor, callback: v => metric === 'donations' ? '$' + (v/1000).toFixed(0) + 'K' : v.toLocaleString() } }
+    }
+  });
+}
+
+function switchMetric(metric, el, activeClass) {
+  document.querySelectorAll('.mtab').forEach(t => t.className = 'mtab');
+  el.classList.add(activeClass);
+  buildTrend(metric);
+}
+
+// ── DONUT CHART ───────────────────────────────────────────────────────────
+function buildDonut() {
+  const total = DATA.service_breakdown.reduce((s,d) => s + d.served, 0);
+  mkChart('donutChart', 'doughnut', {
+    labels: DATA.service_breakdown.map(d => d.service),
+    datasets: [{ data: DATA.service_breakdown.map(d => d.served), backgroundColor: SERVICE_COLORS, borderColor: '#181B24', borderWidth: 3, hoverOffset: 4 }]
+  }, {
+    responsive: true, maintainAspectRatio: false, cutout: '68%',
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.label + ': ' + ((c.raw/total*100).toFixed(1)) + '%' } } }
+  });
+  const legend = document.getElementById('donut-legend');
+  legend.innerHTML = DATA.service_breakdown.map((d,i) => `
+    <div class="dl-row">
+      <div class="dl-dot" style="background:${SERVICE_COLORS[i]}"></div>
+      <span class="dl-name">${d.service}</span>
+      <span class="dl-pct">${(d.served/total*100).toFixed(1)}%</span>
+    </div>`).join('');
+}
+
+// ── QUARTERLY BARS ────────────────────────────────────────────────────────
+function buildQuarterly() {
+  const maxQ = Math.max(...DATA.quarterly_trend.map(q => q.served));
+  const grid = document.getElementById('q-grid');
+  grid.innerHTML = DATA.quarterly_trend.map((q,i) => {
+    const pct = Math.round(q.served / maxQ * 100);
+    const isNew = i >= 4;
+    const col = isNew ? COLORS.green : 'rgba(34,217,138,.4)';
+    return `<div class="q-bar-wrap" title="${q.quarter}: ${q.served.toLocaleString()}">
+      <div class="q-bar" style="height:${pct}%;background:${col};"></div>
+    </div>`;
+  }).join('');
+}
+
+// ── CHANNEL CHART ─────────────────────────────────────────────────────────
+function buildChannel() {
+  mkChart('channelChart', 'bar', {
+    labels: DATA.channel_breakdown.map(c => c.channel),
+    datasets: [{ data: DATA.channel_breakdown.map(c => c.served), backgroundColor: CHANNEL_COLORS, borderRadius: 5, borderSkipped: false }]
+  }, {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Served: ' + c.raw.toLocaleString() } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: baseFont, color: tickColor } },
+      y: { grid: { color: gridColor }, ticks: { font: baseFont, color: tickColor, callback: v => (v/1000).toFixed(0) + 'K' } }
+    }
+  });
+}
+
+// ── REGION BAR CHART ──────────────────────────────────────────────────────
+function buildRegionBar() {
+  const rs = DATA.regional_summary;
+  mkChart('regionBarChart', 'bar', {
+    labels: rs.map(r => r.region),
+    datasets: [
+      { label: 'People Served', data: rs.map(r => r.served), backgroundColor: REGION_COLORS, borderRadius: 5, borderSkipped: false }
+    ]
+  }, {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Served: ' + c.raw.toLocaleString() } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: baseFont, color: tickColor } },
+      y: { grid: { color: gridColor }, ticks: { font: baseFont, color: tickColor, callback: v => (v/1000).toFixed(0) + 'K' } }
+    }
+  });
+}
+
+function buildRegionRows() {
+  const maxServed = DATA.regional_summary[0].served;
+  document.getElementById('region-row').innerHTML = DATA.regional_summary.map((r,i) => {
+    const w = Math.round(r.served / maxServed * 100);
+    return `<div class="rr">
+      <div class="rr-top"><span class="rr-name">${r.region}</span><span class="rr-val">${r.served.toLocaleString()}</span></div>
+      <div class="rr-track"><div class="rr-fill" style="width:${w}%;background:${REGION_COLORS[i]}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function buildRegionTable() {
+  const total = DATA.regional_summary.reduce((s,r) => s + r.served, 0);
+  document.getElementById('region-table').innerHTML = DATA.regional_summary.map((r,i) => {
+    const share = (r.served/total*100).toFixed(1);
+    const dpp = (r.donations / r.served).toFixed(2);
+    const cls = +share >= 25 ? 'pct-hi' : +share >= 15 ? 'pct-md' : 'pct-lo';
+    return `<tr>
+      <td style="color:${REGION_COLORS[i]};font-weight:500">${r.region}</td>
+      <td class="right">${r.served.toLocaleString()}</td>
+      <td class="right">$${(r.donations/1000).toFixed(0)}K</td>
+      <td class="right">${r.vol_hrs.toLocaleString()}</td>
+      <td class="right">$${dpp}</td>
+      <td class="right"><span class="pct-pill ${cls}">${share}%</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SERVICE CHARTS ────────────────────────────────────────────────────────
+function buildServiceBar() {
+  mkChart('serviceBarChart', 'bar', {
+    labels: DATA.service_breakdown.map(s => s.service),
+    datasets: [{ data: DATA.service_breakdown.map(s => s.served), backgroundColor: SERVICE_COLORS, borderRadius: 5, borderSkipped: false }]
+  }, {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Served: ' + c.raw.toLocaleString() } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: baseFont, color: tickColor } },
+      y: { grid: { color: gridColor }, ticks: { font: baseFont, color: tickColor, callback: v => (v/1000).toFixed(0) + 'K' } }
+    }
+  });
+}
+
+function buildServicePie() {
+  const total = DATA.service_breakdown.reduce((s,d) => s + d.served, 0);
+  mkChart('servicePieChart', 'doughnut', {
+    labels: DATA.service_breakdown.map(s => s.service),
+    datasets: [{ data: DATA.service_breakdown.map(s => s.served), backgroundColor: SERVICE_COLORS, borderColor: '#181B24', borderWidth: 2 }]
+  }, {
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.label + ': ' + c.raw.toLocaleString() } } }
+  });
+  const leg = document.getElementById('service-pie-legend');
+  leg.innerHTML = DATA.service_breakdown.map((s,i) => `
+    <div class="dl-row"><div class="dl-dot" style="background:${SERVICE_COLORS[i]}"></div>
+    <span class="dl-name">${s.service}</span><span class="dl-pct">${(s.served/total*100).toFixed(1)}%</span></div>`).join('');
+}
+
+function buildServiceTable() {
+  const total = DATA.service_breakdown.reduce((s,d) => s + d.served, 0);
+  const cats = { "Food Box":"Food Security","Senior Meals":"Food Security","SNAP Enrollment":"Benefits","Youth Program":"Youth","Case Management":"Social Services","Emergency Fund":"Emergency" };
+  document.getElementById('service-table').innerHTML = DATA.service_breakdown.map((s,i) => {
+    const pct = (s.served/total*100).toFixed(1);
+    const cls = +pct >= 30 ? 'pct-hi' : +pct >= 15 ? 'pct-md' : 'pct-lo';
+    return `<tr>
+      <td style="color:${SERVICE_COLORS[i]};font-weight:500">${s.service}</td>
+      <td class="right">${s.served.toLocaleString()}</td>
+      <td class="right"><span class="pct-pill ${cls}">${pct}%</span></td>
+      <td class="right" style="color:var(--text2)">${cats[s.service]||''}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────
+function showTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'regional') { buildRegionBar(); buildRegionRows(); buildRegionTable(); }
+  if (name === 'services')  { buildServiceBar(); buildServicePie(); buildServiceTable(); }
+}
+
+function updateAll() {}
+function updateTrend() { buildTrend(document.getElementById('metricSel').value); }
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+buildTrend('served');
+buildDonut();
+buildQuarterly();
+buildChannel();
+</script>
+</body>
+</html>
